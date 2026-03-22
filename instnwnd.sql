@@ -9348,3 +9348,71 @@ ALTER TABLE EmployeeTerritories
 		[TerritoryID]
 	)
 GO
+
+-------------------------------------------------------
+
+-- Get all products where the unit price is more than 20 and the product name contains the letter "C"
+
+SELECT ProductID , ProductName , UnitPrice FROM Products
+WHERE UnitPrice > 20 AND  ProductName like '%C%'
+
+
+-- Get all customers from either Germany or France
+SELECT CustomerID , ContactName ,Country FROM Customers 
+WHERE Country = 'France' OR Country = 'Germany'
+
+-- Get the top 5 most expensive products ordered by unit price descending
+SELECT TOP 5  ProductID , ProductName , UnitPrice 
+FROM Products 
+ORDER BY UnitPrice  DESC
+
+-- Get the bottom 10% of orders by freight cost
+SELECT TOP 10 PERCENT OrderID , Freight 
+FROM Orders 
+ORDER BY Freight  ASC
+
+-- For each customer, count how many orders they placed — show only customers with more than 3 orders
+SELECT CustomerID , COUNT(CustomerID) AS N'no. of Orders' FROM  Orders
+GROUP BY CustomerID 
+HAVING COUNT(CustomerID) > 3
+
+-- For each category, get the average product price — show only categories where the average is above 25
+SELECT CategoryID , AVG(UnitPrice) AS N'Price' 
+FROM Products 
+GROUP BY CategoryID 
+HAVING AVG(UnitPrice) > 25
+
+-- Get a distinct list of countries that customers come from
+SELECT DISTINCT Country FROM Customers
+
+-- Show each order with the customer's company name and the employee's last name who handled it
+SELECT O.OrderID , C.CompanyName AS N'Customer Comp Name' , E.LastName AS N'Emp Last Name'
+FROM Orders AS O 
+INNER JOIN Customers AS C
+ON O.CustomerID = C.CustomerID
+INNER JOIN Employees AS E
+ON O.EmployeeID = E.EmployeeID
+
+-- Show all customers and their orders — include customers who have never placed an order
+SELECT C.CustomerID , O.OrderID 
+FROM Customers AS C
+LEFT JOIN  Orders AS O 
+ON O.CustomerID = C.CustomerID
+
+--  WRONG Increase the unit price by 10% for all products that belong to the category named "Beverages"
+UPDATE Products
+SET UnitPrice = UnitPrice + (UnitPrice* 0.10)
+WHERE UnitPrice IN(
+SELECT P.UnitPrice FROM  Products AS P INNER JOIN Categories AS C
+ON P.CategoryID = C.CategoryID
+WHERE C.CategoryName = 'Beverages' 
+)
+-- Right
+UPDATE Products
+SET UnitPrice = UnitPrice + (UnitPrice* 0.10)
+WHERE ProductID IN (
+    SELECT P.ProductID FROM Products AS P 
+    INNER JOIN Categories AS C ON P.CategoryID = C.CategoryID
+    WHERE C.CategoryName = 'Beverages'
+)
+
