@@ -9416,3 +9416,123 @@ WHERE ProductID IN (
     WHERE C.CategoryName = 'Beverages'
 )
 
+--------------- 4th sess
+
+SELECT * FROM Customers
+SELECT * FROM Products
+
+-- Convert to money
+SELECT OD.OrderID,
+ OD.ProductID ,
+ OD.UnitPrice , 
+ OD.Quantity , 
+ OD.Discount , 
+ dbo.CalculateSubTotal(OD.Quantity , OD.UnitPrice , OD.Discount) AS Subtotal
+ FROM [Order Details] OD
+WHERE OrderID = 10250
+GO
+
+-- 
+SELECT 
+O.OrderID,
+O.CustomerId,
+O.OrderDate,
+CONVERT(money , SUM((1 - OD.Discount) * (OD.UnitPrice * OD.Quantity)) , 2)  AS Total
+FROM Orders  O 
+INNER JOIN [Order Details]  OD 
+ON O.OrderID = OD.OrderID
+WHERE O.OrderID = 10250
+GROUP BY 
+O.OrderID,
+O.CustomerId,
+O.OrderDate;
+GO
+
+-- Functions
+
+-- Scaler
+CREATE OR ALTER FUNCTION dbo.CalculateSubTotal(@quantity int , @unitPrice money , @discount real )
+RETURNS money WITH SCHEMABINDING
+AS
+BEGIN 
+DECLARE @subTotal money;
+SELECT @subTotal = CONVERT(money , (1 - @discount) * (@unitPrice * @quantity) , 2) 
+RETURN @subTotal; 
+END 
+GO
+
+
+
+-- Table valued
+CREATE OR ALTER FUNCTION dbo.GetOrderDetails(@orderID int)
+Returns Table 
+AS 
+RETURN (
+	SELECT OD.OrderID,
+	OD.ProductID ,
+	OD.UnitPrice , 
+	OD.Quantity , 
+	OD.Discount , 
+	dbo.CalculateSubTotal(OD.Quantity , OD.UnitPrice , OD.Discount) AS SUBTOTAL
+	FROM [Order Details] OD
+	WHERE OrderID = @orderID
+)
+GO
+
+
+SELECT * FROM dbo.GetOrderDetails(10250);
+GO
+
+CREATE OR ALTER FUNCTION dbo.CalculateOrderTotal(@orderID int  )
+RETURNS money 
+AS
+BEGIN 
+DECLARE @total money;
+SELECT @total = SUM(SUBTOTAL) FROM dbo.GetOrderDetails(@orderId)
+RETURN @total
+END 
+GO
+
+
+CREATE OR ALTER FUNCTION dbo.getCustomerOrders( @customerID NVARCHAR(50) )
+RETURNS TABLE
+AS
+RETURN
+(
+	SELECT 
+	O.OrderID,
+	O.CustomerId,
+	O.OrderDate,
+	dbo.CalculateOrderTotal(O.OrderID)  AS Total
+	FROM Orders  O 
+	WHERE 
+	O.CustomerID = @customerID
+)
+GO
+
+
+SELECT * FROM dbo.getCustomerOrders('CACTU')
+GO
+-- Built In funcs
+
+-- Stored procedures
+CREATE OR ALTER PROCEDURE dbo.SalesByCategoryAndYear(@categoryName nvarchar(15), @year int , @count int OUTPUT)
+AS
+BEGIN
+SELECT P.ProductName,
+ROUND(SUM(OD.Quantity * ( 1- OD.Discount) * OD.UnitPrice ) , 0 )AS TotalPurchase
+FROM [Order Details] OD
+INNER JOIN Orders O ON O.OrderID = OD.OrderID
+INNER JOIN Products P ON P.ProductID = OD.ProductID
+INNER JOIN Categories C ON C.CategoryID = P.CategoryID
+WHERE C.CategoryName = @categoryName AND YEAR(O.OrderDate) = @year
+GROUP BY ProductName
+ORDER BY ProductName
+
+SELECT @count = @@ROWCOUNT
+END
+GO
+
+DECLARE @count int;
+EXEC dbo.SalesByCategoryAndYear 'Beverages' , 1997 , @count OUTPUT;
+SELECT @count AS ' TOTS'
