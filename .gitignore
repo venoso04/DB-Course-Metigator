@@ -1,0 +1,27 @@
+# SQL Server files
+*.mdf
+*.ldf
+*.ndf
+
+# Backup files
+*.bak
+*.bak2
+*.trn
+
+# Export files
+*.csv
+*.xlsx
+*.xls
+
+# SSMS / Azure Data Studio settings
+*.sue
+.vs/
+
+# Sensitive config (connection strings, credentials)
+*.env
+appsettings.local.json
+connectionstrings.json
+
+# OS files
+.DS_Store
+Thumbs.db
