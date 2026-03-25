@@ -4,7 +4,7 @@ This repository contains my progress and practice work following a SQL Server co
 
 ## Course Playlist
 
-[▶️ Watch on YouTube](<PLAYLIST_LINK_HERE>)
+[▶️ Watch on YouTube](<https://www.youtube.com/playlist?list=PL4n1Qos4Tb6RP_OovpgjoHLkCVaYFy-aj>)
 
 ## Contents
 
